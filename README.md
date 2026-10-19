@@ -1,7 +1,4 @@
-# Local Community Skill-Sharing & Bartering System
 
-**ICT Project — Jomo Kenyatta University of Agriculture and Technology**  
-Student: Abuga Sally Nyagante · SCT121-C004-0326/2024
 
 A web platform where local community members list skills, search for help, message each other, share contact when ready, and leave ratings/reviews — all without money.
 
@@ -56,19 +53,7 @@ Open **http://localhost:3000**
 
 ---
 
-## Demo Accounts
 
-Password for all: `password123`
-
-| Email | Name | Skills |
-|-------|------|--------|
-| jane@example.com | Jane Wanjiku | Math tutoring, Piano |
-| david@example.com | David Otieno | Plumbing, Handyman |
-| amina@example.com | Amina Hassan | Logo design, Photography |
-| brian@example.com | Brian Kamau | Web dev, Python tutoring |
-| grace@example.com | Grace Achieng | Tailoring, Sewing classes |
-
----
 
 ## API Overview
 
@@ -120,4 +105,3 @@ skill-share-system/
 
 ---
 
-Built as a complete, working portfolio project matching the ICT Project II specification.
