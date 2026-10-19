@@ -1,26 +1,14 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import Lottie from 'lottie-react';
 import { useAuth } from '../context/AuthContext';
 import { api } from '../api/client';
-
-// Free Lottie animation (community / collaboration) from LottieFiles CDN
-const LOTTIE_URL = 'https://assets10.lottiefiles.com/packages/lf20_1pxqjqps.json';
 
 export default function Home() {
   const { isAuthenticated } = useAuth();
   const [stats, setStats] = useState({ skills: 0, members: 0, exchanges: 0 });
-  const [animationData, setAnimationData] = useState(null);
 
   useEffect(() => {
     api.getStats().then(setStats).catch(() => {});
-  }, []);
-
-  useEffect(() => {
-    fetch(LOTTIE_URL)
-      .then((r) => r.json())
-      .then(setAnimationData)
-      .catch(() => setAnimationData(null));
   }, []);
 
   return (
@@ -73,18 +61,15 @@ export default function Home() {
             </div>
 
             <div className="order-1 md:order-2 flex justify-center">
-              <div className="w-full max-w-md aspect-square glass rounded-3xl border border-white/50 shadow-lg shadow-teal-900/5 overflow-hidden flex items-center justify-center p-4">
-                {animationData ? (
-                  <Lottie
-                    animationData={animationData}
-                    loop
-                    autoplay
-                    className="w-full h-full"
-                    style={{ maxHeight: 360 }}
-                  />
-                ) : (
-                  <div className="w-full h-64 rounded-2xl bg-teal-50/50 animate-pulse" />
-                )}
+              <div className="w-full max-w-md aspect-square glass rounded-3xl border border-white/50 shadow-lg shadow-teal-900/5 overflow-hidden flex items-center justify-center p-2">
+                <object
+                  type="image/svg+xml"
+                  data="/skillshare_animation.svg"
+                  title="SkillShare animation"
+                  className="w-full h-full max-h-[360px]"
+                >
+                  <img src="/skillshare_animation.svg" alt="SkillShare illustration" className="w-full h-auto" />
+                </object>
               </div>
             </div>
           </div>
