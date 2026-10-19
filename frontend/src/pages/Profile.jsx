@@ -63,17 +63,15 @@ export default function Profile() {
 
   return (
     <div className="max-w-3xl mx-auto px-4 py-10">
-      <h1 className="text-3xl font-bold mb-6">My Profile</h1>
+      <h1 className="text-3xl font-bold mb-6">{isOwn ? 'My Profile' : 'Profile'}</h1>
 
       <div className="card p-6 mb-6">
         <div className="flex items-start justify-between mb-6">
           <h2 className="font-semibold text-lg">Profile Details</h2>
           {profile.avg_rating && (
             <div className="flex items-center gap-1 text-sm font-sans">
-              {[1, 2, 3, 4, 5].map((n) => (
-                <span key={n} className={n <= stars ? 'text-amber-400' : 'text-gray-200'}>★</span>
-              ))}
-              <span className="text-gray-500 ml-1">{profile.avg_rating} ({profile.review_count} reviews)</span>
+              <span className="text-amber-600 font-medium">{profile.avg_rating}/5</span>
+              <span className="text-gray-500">({profile.review_count} reviews)</span>
             </div>
           )}
         </div>
@@ -98,12 +96,12 @@ export default function Profile() {
             </div>
             <div className="grid sm:grid-cols-2 gap-4">
               <div>
-                <label className="text-sm text-gray-600 block mb-1"> Location</label>
+                <label className="text-sm text-gray-600 block mb-1">Location</label>
                 <input className="input" placeholder="City, Country" value={form.location}
                   onChange={(e) => setForm({ ...form, location: e.target.value })} />
               </div>
               <div>
-                <label className="text-sm text-gray-600 block mb-1"> Phone</label>
+                <label className="text-sm text-gray-600 block mb-1">Phone</label>
                 <input className="input" placeholder="+254..." value={form.phone}
                   onChange={(e) => setForm({ ...form, phone: e.target.value })} />
               </div>
@@ -116,18 +114,17 @@ export default function Profile() {
           <div className="font-sans text-sm space-y-2 text-gray-600">
             <p><strong>Name:</strong> {profile.full_name}</p>
             {profile.bio && <p>{profile.bio}</p>}
-            {profile.location && <p> {profile.location}</p>}
+            {profile.location && <p>{profile.location}</p>}
           </div>
         )}
       </div>
 
-      {/* Skills */}
       <div className="card p-6">
         <div className="flex items-center justify-between mb-4">
-          <h2 className="font-semibold text-lg">My Skills</h2>
+          <h2 className="font-semibold text-lg">{isOwn ? 'My Skills' : 'Skills'}</h2>
           {isOwn && (
-            <button onClick={() => navigate('/offer')} className="btn-teal text-sm py-1.5 px-4 flex items-center gap-1">
-              + Add Skill
+            <button onClick={() => navigate('/offer')} className="btn-teal text-sm py-1.5 px-4">
+              Add Skill
             </button>
           )}
         </div>
@@ -138,7 +135,9 @@ export default function Profile() {
           <div className="space-y-3">
             {profile.skills.map((s) => (
               <div key={s.id} className="flex items-center gap-3 p-3 rounded-xl bg-gray-50">
-                <div className="w-9 h-9 rounded-full bg-blue-50 flex items-center justify-center text-sm">💻</div>
+                <div className="w-9 h-9 rounded-full bg-teal-50 text-teal-700 flex items-center justify-center text-sm font-semibold">
+                  {s.title?.charAt(0)}
+                </div>
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2">
                     <span className="font-medium">{s.title}</span>
@@ -157,7 +156,6 @@ export default function Profile() {
         )}
       </div>
 
-      {/* Reviews */}
       {profile.reviews?.length > 0 && (
         <div className="mt-6">
           <h2 className="font-semibold text-lg mb-3">Reviews</h2>
@@ -166,7 +164,7 @@ export default function Profile() {
               <div key={r.id} className="card p-4">
                 <div className="flex justify-between items-center">
                   <span className="font-sans text-sm font-medium">{r.reviewer_name}</span>
-                  <span className="text-amber-400 text-sm">{'★'.repeat(r.rating)}</span>
+                  <span className="text-amber-600 text-sm font-medium">{r.rating}/5</span>
                 </div>
                 {r.comment && <p className="text-sm text-gray-500 font-sans mt-1">{r.comment}</p>}
               </div>
