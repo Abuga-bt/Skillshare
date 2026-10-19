@@ -25,7 +25,7 @@ export default function Layout() {
     return () => clearInterval(t);
   }, [isAuthenticated, location.pathname]);
 
-  const nav = (to, label, icon, badge) => {
+  const nav = (to, label, badge) => {
     const active = location.pathname === to || (to !== '/' && location.pathname.startsWith(to));
     return (
       <Link
@@ -35,10 +35,9 @@ export default function Layout() {
           active ? 'text-teal-700 font-semibold bg-teal-50' : 'text-stone-600 hover:text-teal-700 hover:bg-stone-50'
         }`}
       >
-        <span className="text-base opacity-80">{icon}</span>
         {label}
         {badge > 0 && (
-          <span className="absolute -top-0.5 right-0 min-w-[18px] h-[18px] px-1 rounded-full bg-red-500 text-white text-[10px] font-bold flex items-center justify-center leading-none shadow-sm">
+          <span className="ml-1 min-w-[18px] h-[18px] px-1 rounded-full bg-red-500 text-white text-[10px] font-bold flex items-center justify-center leading-none">
             {badge > 99 ? '99+' : badge}
           </span>
         )}
@@ -57,10 +56,10 @@ export default function Layout() {
           </Link>
 
           <nav className="hidden md:flex items-center gap-0.5">
-            {nav('/browse', 'Browse Skills', '🔍')}
-            {isAuthenticated && nav('/exchanges', 'Exchanges', '⇄')}
-            {isAuthenticated && nav('/messages', 'Messages', '💬', unread)}
-            {nav('/help', 'Help', '❓')}
+            {nav('/browse', 'Browse Skills')}
+            {isAuthenticated && nav('/exchanges', 'Exchanges')}
+            {isAuthenticated && nav('/messages', 'Messages', unread)}
+            {nav('/help', 'Help')}
           </nav>
 
           <div className="flex items-center gap-2">
@@ -87,11 +86,11 @@ export default function Layout() {
               </>
             )}
             <button
-              className="md:hidden relative p-2 text-stone-600 hover:bg-stone-100 rounded-lg"
+              className="md:hidden relative p-2 text-stone-600 hover:bg-stone-100 rounded-lg text-sm font-medium"
               onClick={() => setMenuOpen(!menuOpen)}
               aria-label="Menu"
             >
-              {menuOpen ? '✕' : '☰'}
+              {menuOpen ? 'Close' : 'Menu'}
               {unread > 0 && !menuOpen && (
                 <span className="absolute top-1 right-1 w-2 h-2 rounded-full bg-red-500" />
               )}
@@ -101,10 +100,10 @@ export default function Layout() {
 
         {menuOpen && (
           <div className="md:hidden border-t border-stone-100 bg-white px-4 py-3 space-y-1 shadow-lg">
-            {nav('/browse', 'Browse Skills', '🔍')}
-            {isAuthenticated && nav('/exchanges', 'Exchanges', '⇄')}
-            {isAuthenticated && nav('/messages', 'Messages', '💬', unread)}
-            {nav('/help', 'Help', '❓')}
+            {nav('/browse', 'Browse Skills')}
+            {isAuthenticated && nav('/exchanges', 'Exchanges')}
+            {isAuthenticated && nav('/messages', 'Messages', unread)}
+            {nav('/help', 'Help')}
             {isAuthenticated && (
               <button
                 onClick={() => { logout(); navigate('/'); setMenuOpen(false); }}
