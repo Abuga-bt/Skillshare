@@ -1,107 +1,58 @@
+# SkillShare — Local Community Skill Exchange
 
+Web platform for local skill sharing and bartering (JKUAT ICT Project).
 
-A web platform where local community members list skills, search for help, message each other, share contact when ready, and leave ratings/reviews — all without money.
+## Stack
 
----
+- **Frontend:** React + Vite + Tailwind → deploy on **Netlify**
+- **Backend:** Node + Express + JSON file DB → deploy on **Render**
 
-## Features
-
-| Feature | Status |
-|---------|--------|
-| User registration & login (JWT + bcrypt) | ✅ |
-| User profiles (name, location, bio) | ✅ |
-| Offer / edit / delete skills | ✅ |
-| Browse & search skills by keyword + category | ✅ |
-| Direct messaging | ✅ |
-| Contact sharing inside chat | ✅ |
-| Ratings & reviews | ✅ |
-| Responsive UI (Tailwind) | ✅ |
-| Seeded demo data | ✅ |
-
----
-
-## Tech Stack
-
-- **Frontend:** React 18 + Vite + Tailwind CSS + React Router
-- **Backend:** Node.js + Express
-- **Database:** JSON file store — zero config, no native deps
-- **Auth:** JWT + bcrypt password hashing
-
----
-
-## Quick Start
-
-### 1. Backend
+## Local development
 
 ```bash
-cd backend
-npm install
-npm start
+# Terminal 1
+cd backend && npm install && npm start
+
+# Terminal 2
+cd frontend && npm install && npm run dev
 ```
 
-Runs on **http://localhost:5000**
+Open http://localhost:3000  
+Demo: `jane@example.com` / `password123`
 
-### 2. Frontend
+## Deploy
 
-```bash
-cd frontend
-npm install
-npm run dev
-```
+### 1. Backend on Render
 
-Open **http://localhost:3000**
+1. Go to [render.com](https://render.com) → **New → Web Service**
+2. Connect GitHub repo `Abuga-bt/Skillshare`
+3. Settings:
+   - **Root Directory:** `backend`
+   - **Build Command:** `npm install`
+   - **Start Command:** `npm start`
+   - **Instance:** Free
+4. Environment variables:
+   - `JWT_SECRET` = any long random string
+5. Deploy → copy the URL, e.g. `https://skillshare-api.onrender.com`
 
----
+### 2. Frontend on Netlify
 
+1. Go to [netlify.com](https://netlify.com) → **Add new site → Import from Git**
+2. Select repo `Abuga-bt/Skillshare`
+3. Settings (or use `netlify.toml` already in repo):
+   - **Base directory:** `frontend`
+   - **Build command:** `npm run build`
+   - **Publish directory:** `frontend/dist`
+4. Environment variables:
+   - `VITE_API_URL` = your Render URL **without** trailing slash  
+     Example: `https://skillshare-api.onrender.com`
+5. Deploy
 
+### 3. Order matters
 
-## API Overview
+Deploy **backend first**, then set `VITE_API_URL` on Netlify and deploy/redeploy the frontend.
 
-| Method | Endpoint | Auth | Description |
-|--------|----------|------|-------------|
-| POST | `/api/auth/register` | — | Create account |
-| POST | `/api/auth/login` | — | Login |
-| GET | `/api/skills` | — | List/search skills |
-| POST | `/api/skills` | ✅ | Offer a skill |
-| GET | `/api/users/:id` | ✅ | Profile + skills + reviews |
-| GET | `/api/messages/conversations` | ✅ | My conversations |
-| POST | `/api/messages/start` | ✅ | Start chat |
-| GET | `/api/messages/:id` | ✅ | Chat history |
-| POST | `/api/messages` | ✅ | Send message |
-| POST | `/api/reviews` | ✅ | Leave review |
+## Notes
 
----
-
-## Project Structure
-
-```
-skill-share-system/
-├── backend/
-│   ├── server.js          # Express API
-│   ├── db.js              # SQLite schema + seed
-│   └── package.json
-├── frontend/
-│   ├── src/
-│   │   ├── pages/         # All screens
-│   │   ├── components/    # Layout
-│   │   ├── context/       # Auth state
-│   │   └── api/           # API client
-│   └── package.json
-└── README.md
-```
-
----
-
-## Screens
-
-1. **Home** — Hero + how it works  
-2. **Browse Skills** — Search + category filter  
-3. **Skill Detail** — View + message provider  
-4. **Dashboard** — My skills + recent chats  
-5. **Messages** — Conversation list + chat + contact share  
-6. **Profile** — Skills, reviews, edit own profile, leave review  
-7. **Offer Skill** — Create listing  
-8. **Help** — Guide + demo credentials  
-
----
-
+- Free Render services sleep after ~15 min idle; first request may take 30–60s.
+- Data is stored in a JSON file on the server (resets if the free instance is wiped).

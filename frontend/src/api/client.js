@@ -1,4 +1,6 @@
-const API = '/api';
+const API = import.meta.env.VITE_API_URL
+  ? `${import.meta.env.VITE_API_URL.replace(/\/$/, '')}/api`
+  : '/api';
 
 function getToken() {
   return localStorage.getItem('token');
@@ -33,6 +35,8 @@ export const api = {
   createExchange: (body) => request('/exchanges', { method: 'POST', body: JSON.stringify(body) }),
   updateExchange: (id, body) => request(`/exchanges/${id}`, { method: 'PATCH', body: JSON.stringify(body) }),
   getConversations: () => request('/messages/conversations'),
+  getUnreadCount: () => request('/messages/unread-count'),
+  markConversationRead: (convId) => request(`/messages/${convId}/read`, { method: 'POST' }),
   startConversation: (body) => request('/messages/start', { method: 'POST', body: JSON.stringify(body) }),
   getMessages: (convId) => request(`/messages/${convId}`),
   sendMessage: (body) => request('/messages', { method: 'POST', body: JSON.stringify(body) }),
