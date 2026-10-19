@@ -112,11 +112,11 @@ export default function Exchanges() {
 
                   {tab === 'received' && ex.status === 'pending' && (
                     <div className="flex gap-2 mt-4 font-sans">
-                      <button onClick={() => handleStatus(ex.id, 'accepted')} className="btn-teal text-sm py-1.5 px-4 flex items-center gap-1">
-                        ✓ Accept
+                      <button onClick={() => handleStatus(ex.id, 'accepted')} className="btn-teal text-sm py-1.5 px-4">
+                        Accept
                       </button>
-                      <button onClick={() => handleStatus(ex.id, 'declined')} className="bg-red-500 hover:bg-red-600 text-white text-sm py-1.5 px-4 rounded-full flex items-center gap-1">
-                        ✕ Decline
+                      <button onClick={() => handleStatus(ex.id, 'declined')} className="bg-red-500 hover:bg-red-600 text-white text-sm py-1.5 px-4 rounded-full">
+                        Decline
                       </button>
                     </div>
                   )}
@@ -135,9 +135,9 @@ export default function Exchanges() {
                   {ex.status === 'completed' && (
                     <button
                       onClick={() => setReviewFor(ex)}
-                      className="mt-3 font-sans text-sm text-gray-500 hover:text-teal-700 flex items-center gap-1"
+                      className="mt-3 font-sans text-sm text-gray-500 hover:text-teal-700"
                     >
-                      ☆ Leave Review
+                      Leave Review
                     </button>
                   )}
                 </div>
