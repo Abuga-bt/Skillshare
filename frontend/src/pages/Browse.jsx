@@ -3,25 +3,25 @@ import { useSearchParams, useNavigate } from 'react-router-dom';
 import { api } from '../api/client';
 import { useAuth } from '../context/AuthContext';
 
-const ICONS = {
-  heart: '❤️', grad: '🎓', laptop: '💻', music: '🎵', tool: '🔧',
-  palette: '🎨', shirt: '👕', star: '⭐',
+const LETTER = {
+  heart: 'F', grad: 'E', laptop: 'T', music: 'M', tool: 'H',
+  palette: 'D', shirt: 'C', star: 'S',
 };
 
-function iconFor(skill) {
-  if (skill.icon && ICONS[skill.icon]) return ICONS[skill.icon];
+function letterFor(skill) {
+  if (skill.icon && LETTER[skill.icon]) return LETTER[skill.icon];
   const c = (skill.category || '').toLowerCase();
-  if (c.includes('fit') || c.includes('gym')) return '❤️';
-  if (c.includes('edu') || c.includes('teach')) return '🎓';
-  if (c.includes('tech') || c.includes('dev')) return '💻';
-  if (c.includes('music')) return '🎵';
-  if (c.includes('home') || c.includes('plumb')) return '🔧';
-  if (c.includes('design') || c.includes('creat')) return '🎨';
-  if (c.includes('fashion')) return '👕';
-  return '⭐';
+  if (c.includes('fit') || c.includes('gym')) return 'F';
+  if (c.includes('edu') || c.includes('teach')) return 'E';
+  if (c.includes('tech') || c.includes('dev')) return 'T';
+  if (c.includes('music')) return 'M';
+  if (c.includes('home') || c.includes('plumb')) return 'H';
+  if (c.includes('design') || c.includes('creat')) return 'D';
+  if (c.includes('fashion')) return 'C';
+  return (skill.title || 'S').charAt(0).toUpperCase();
 }
 
-const ICON_BG = ['bg-rose-50', 'bg-teal-50', 'bg-sky-50', 'bg-amber-50', 'bg-violet-50', 'bg-emerald-50'];
+const ICON_BG = ['bg-rose-50 text-rose-700', 'bg-teal-50 text-teal-700', 'bg-sky-50 text-sky-700', 'bg-amber-50 text-amber-700', 'bg-violet-50 text-violet-700', 'bg-emerald-50 text-emerald-700'];
 
 export default function Browse() {
   const [searchParams] = useSearchParams();
@@ -73,9 +73,8 @@ export default function Browse() {
 
       <form onSubmit={handleSearch} className="flex flex-col sm:flex-row gap-3 mb-8">
         <div className="relative flex-1">
-          <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-stone-400 text-sm">🔍</span>
           <input
-            className="input pl-10"
+            className="input"
             placeholder="Search skills..."
             value={q}
             onChange={(e) => setQ(e.target.value)}
@@ -106,7 +105,6 @@ export default function Browse() {
         </div>
       ) : skills.length === 0 ? (
         <div className="card p-14 text-center">
-          <div className="text-4xl mb-3">🔍</div>
           <p className="text-stone-500 mb-1 font-medium">No skills found</p>
           <p className="text-stone-400 text-sm mb-4">Try a different search or category</p>
           <button onClick={() => { setQ(''); setCategory('All Categories'); }} className="btn-teal-outline text-sm">
@@ -118,8 +116,8 @@ export default function Browse() {
           {skills.map((skill, i) => (
             <div key={skill.id} className="card-hover p-5 flex flex-col">
               <div className="flex items-start justify-between mb-3">
-                <div className={`w-11 h-11 rounded-full ${ICON_BG[i % ICON_BG.length]} flex items-center justify-center text-lg`}>
-                  {iconFor(skill)}
+                <div className={`w-11 h-11 rounded-full ${ICON_BG[i % ICON_BG.length]} flex items-center justify-center text-sm font-bold`}>
+                  {letterFor(skill)}
                 </div>
                 <span className="text-xs font-medium bg-teal-50 text-teal-700 px-2.5 py-1 rounded-full">
                   Offering
@@ -134,7 +132,7 @@ export default function Browse() {
                 <div>
                   <div className="font-medium text-stone-800 text-sm">{skill.provider_name}</div>
                   {skill.provider_location && (
-                    <div className="text-xs text-stone-400">📍 {skill.provider_location}</div>
+                    <div className="text-xs text-stone-400">{skill.provider_location}</div>
                   )}
                 </div>
               </div>
@@ -143,7 +141,7 @@ export default function Browse() {
                 disabled={requesting === skill.id}
                 className="w-full text-sm py-2.5 rounded-xl bg-stone-50 hover:bg-teal-50 text-stone-600 hover:text-teal-700 border border-stone-100 hover:border-teal-100 transition-all flex items-center justify-center gap-2 font-medium"
               >
-                ⇄ {requesting === skill.id ? 'Sending...' : 'Request Exchange'}
+                {requesting === skill.id ? 'Sending...' : 'Request Exchange'}
               </button>
             </div>
           ))}
