@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { api } from '../api/client';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
+import { SkeletonList } from '../components/Skeleton';
 
 export default function Exchanges() {
   const { user } = useAuth();
@@ -87,7 +88,7 @@ export default function Exchanges() {
       </div>
 
       {loading ? (
-        <p className="font-sans text-gray-400">Loading...</p>
+        <SkeletonList rows={3} />
       ) : filtered.length === 0 ? (
         <div className="card p-10 text-center text-gray-400 font-sans">No {tab} exchanges yet.</div>
       ) : (
