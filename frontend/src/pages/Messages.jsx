@@ -41,7 +41,7 @@ export default function Messages() {
     setSending(true);
     try {
       const body = shareContact
-        ? { conversation_id: convId, message_text: `📱 My contact: ${user.phone || user.email}`, contact_shared: true }
+        ? { conversation_id: convId, message_text: `My contact: ${user.phone || user.email}`, contact_shared: true }
         : { conversation_id: convId, message_text: text.trim() };
       const msg = await api.sendMessage(body);
       setMessages((prev) => [...prev, msg]);
@@ -144,7 +144,7 @@ export default function Messages() {
               <div className="p-3 border-t border-stone-100 space-y-2">
                 <button type="button" onClick={(e) => send(e, true)} disabled={sending}
                   className="text-xs text-teal-600 hover:underline">
-                  📱 Share my contact
+                  Share my contact
                 </button>
                 <form onSubmit={send} className="flex gap-2">
                   <input className="input flex-1" placeholder="Type a message..." value={text}
