@@ -32,7 +32,7 @@ export default function Layout() {
         to={to}
         onClick={() => setMenuOpen(false)}
         className={`relative flex items-center gap-1.5 px-3 py-2 text-sm rounded-lg transition-colors ${
-          active ? 'text-teal-700 font-semibold bg-teal-50' : 'text-stone-600 hover:text-teal-700 hover:bg-stone-50'
+          active ? 'text-teal-700 font-semibold bg-teal-50/80' : 'text-stone-600 hover:text-teal-700 hover:bg-white/50'
         }`}
       >
         {label}
@@ -49,7 +49,7 @@ export default function Layout() {
 
   return (
     <div className="min-h-screen flex flex-col">
-      <header className="bg-white/90 backdrop-blur-md border-b border-stone-100 sticky top-0 z-50">
+      <header className="glass-strong sticky top-0 z-50 border-b border-white/40">
         <div className="max-w-6xl mx-auto px-4 h-14 flex items-center justify-between">
           <Link to="/" className="font-display font-bold text-xl tracking-tight text-stone-900">
             Skill<span className="text-teal-600">Share</span>
@@ -86,7 +86,7 @@ export default function Layout() {
               </>
             )}
             <button
-              className="md:hidden relative p-2 text-stone-600 hover:bg-stone-100 rounded-lg text-sm font-medium"
+              className="md:hidden relative p-2 text-stone-600 hover:bg-white/50 rounded-lg text-sm font-medium"
               onClick={() => setMenuOpen(!menuOpen)}
               aria-label="Menu"
             >
@@ -99,7 +99,7 @@ export default function Layout() {
         </div>
 
         {menuOpen && (
-          <div className="md:hidden border-t border-stone-100 bg-white px-4 py-3 space-y-1 shadow-lg">
+          <div className="md:hidden border-t border-white/40 glass-strong px-4 py-3 space-y-1">
             {nav('/browse', 'Browse Skills')}
             {isAuthenticated && nav('/exchanges', 'Exchanges')}
             {isAuthenticated && nav('/messages', 'Messages', unread)}
@@ -120,7 +120,7 @@ export default function Layout() {
         <Outlet />
       </main>
 
-      <footer className="bg-white border-t border-stone-100 py-8 mt-auto">
+      <footer className="glass border-t border-white/40 py-8 mt-auto">
         <div className="max-w-6xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-3 text-sm text-stone-400">
           <div className="font-display font-semibold text-stone-600">
             Skill<span className="text-teal-600">Share</span>
