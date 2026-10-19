@@ -22,10 +22,10 @@ export default function Help() {
       <h2 className="text-center font-bold text-lg mb-6">Quick Links</h2>
       <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-12">
         {[
-          { icon: '👥', title: 'Getting Started', desc: 'Create your profile and list your first skill', to: '/register' },
-          { icon: '📖', title: 'Browse Skills', desc: 'Explore what the community has to offer', to: '/browse' },
-          { icon: '💬', title: 'Messages', desc: 'Connect with other community members', to: '/messages' },
-          { icon: '🛡️', title: 'Community Guidelines', desc: 'Learn about our community standards', to: '/help' },
+          { icon: '1', title: 'Getting Started', desc: 'Create your profile and list your first skill', to: '/register' },
+          { icon: '2', title: 'Browse Skills', desc: 'Explore what the community has to offer', to: '/browse' },
+          { icon: '3', title: 'Messages', desc: 'Connect with other community members', to: '/messages' },
+          { icon: '4', title: 'Community Guidelines', desc: 'Learn about our community standards', to: '/help' },
         ].map((item) => (
           <Link key={item.title} to={item.to} className="card p-5 text-center hover:shadow-md transition">
             <div className="text-2xl mb-2 text-teal-500">{item.icon}</div>
@@ -43,7 +43,7 @@ export default function Help() {
               className="w-full flex items-center justify-between px-5 py-4 text-left font-sans text-sm font-medium hover:bg-gray-50 transition"
             >
               {item.q}
-              <span className="text-gray-400">{open === i ? '▴' : '▾'}</span>
+              <span className="text-gray-400">{open === i ? '-' : '+'}</span>
             </button>
             {open === i && (
               <div className="px-5 pb-4 text-sm text-gray-500 font-sans border-t border-gray-50 pt-3">
