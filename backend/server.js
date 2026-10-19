@@ -158,7 +158,6 @@ app.patch('/api/exchanges/:id', auth, (req, res) => {
   if (!['accepted', 'declined', 'completed'].includes(status)) {
     return res.status(400).json({ error: 'Invalid status' });
   }
-  // Only provider can accept/decline; either party can mark completed
   if ((status === 'accepted' || status === 'declined') && ex.provider_id !== req.user.id) {
     return res.status(403).json({ error: 'Only the skill provider can accept/decline' });
   }
@@ -166,7 +165,6 @@ app.patch('/api/exchanges/:id', auth, (req, res) => {
     return res.status(403).json({ error: 'Not your exchange' });
   }
   const updated = db.updateExchange(req.params.id, { status });
-  // On accept, auto-create conversation
   if (status === 'accepted') {
     let conv = db.findConversationBetween(ex.requester_id, ex.provider_id);
     if (!conv) {
@@ -185,6 +183,20 @@ app.patch('/api/exchanges/:id', auth, (req, res) => {
 
 // MESSAGES
 app.get('/api/messages/conversations', auth, (req, res) => res.json(db.getConversations(req.user.id)));
+
+app.get('/api/messages/unread-count', auth, (req, res) => {
+  res.json({ count: db.getUnreadTotal(req.user.id) });
+});
+
+app.post('/api/messages/:conversationId/read', auth, (req, res) => {
+  const conv = db.findConversation(req.params.conversationId);
+  if (!conv) return res.status(404).json({ error: 'Conversation not found' });
+  if (conv.user1_id !== req.user.id && conv.user2_id !== req.user.id) {
+    return res.status(403).json({ error: 'Not your conversation' });
+  }
+  db.markConversationRead(req.params.conversationId, req.user.id);
+  res.json({ ok: true });
+});
 
 app.post('/api/messages/start', auth, (req, res) => {
   const { other_user_id, skill_id } = req.body;
@@ -249,4 +261,4 @@ app.get('/api/users/:id/reviews', (req, res) => res.json(db.getReviewsFor(req.pa
 
 app.get('/api/health', (req, res) => res.json({ status: 'ok' }));
 
-app.listen(PORT, () => console.log(`SkillShare backend running on http://localhost:${PORT}`));
+app.listen(PORT, '0.0.0.0', () => console.log(`SkillShare backend running on port ${PORT}`));
