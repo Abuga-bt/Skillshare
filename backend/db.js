@@ -67,7 +67,6 @@ function seed(data) {
     created_at: new Date().toISOString(),
   }));
 
-  // Sample exchange
   data.exchanges = [
     {
       id: uuidv4(),
@@ -148,7 +147,6 @@ const db = {
   },
   deleteSkill: (id) => { data.skills = data.skills.filter((s) => s.id !== id); save(data); },
   getSkillsByUser: (userId) => data.skills.filter((s) => s.user_id === userId).sort((a, b) => new Date(b.created_at) - new Date(a.created_at)),
-  // Exchanges
   createExchange: (ex) => { data.exchanges.push(ex); save(data); return ex; },
   findExchange: (id) => data.exchanges.find((e) => e.id === id),
   updateExchange: (id, updates) => {
@@ -177,7 +175,6 @@ const db = {
       })
       .sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
   },
-  // Messages
   getConversations: (userId) => {
     return data.conversations
       .filter((c) => c.user1_id === userId || c.user2_id === userId)
@@ -186,6 +183,10 @@ const db = {
         const other = data.users.find((u) => u.id === otherId);
         const skill = c.skill_id ? data.skills.find((s) => s.id === c.skill_id) : null;
         const msgs = data.messages.filter((m) => m.conversation_id === c.id).sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+        const lastRead = (c.last_read && c.last_read[userId]) || '1970-01-01';
+        const unread_count = data.messages.filter(
+          (m) => m.conversation_id === c.id && m.sender_id !== userId && new Date(m.created_at) > new Date(lastRead)
+        ).length;
         return {
           ...c,
           other_name: other?.full_name,
@@ -193,9 +194,28 @@ const db = {
           skill_title: skill?.title,
           last_message: msgs[0]?.message_text,
           last_message_at: msgs[0]?.created_at,
+          unread_count,
         };
       })
       .sort((a, b) => new Date(b.last_message_at || 0) - new Date(a.last_message_at || 0));
+  },
+  markConversationRead: (convId, userId) => {
+    const c = data.conversations.find((x) => x.id === convId);
+    if (!c) return null;
+    if (!c.last_read) c.last_read = {};
+    c.last_read[userId] = new Date().toISOString();
+    save(data);
+    return c;
+  },
+  getUnreadTotal: (userId) => {
+    return data.conversations
+      .filter((c) => c.user1_id === userId || c.user2_id === userId)
+      .reduce((sum, c) => {
+        const lastRead = (c.last_read && c.last_read[userId]) || '1970-01-01';
+        return sum + data.messages.filter(
+          (m) => m.conversation_id === c.id && m.sender_id !== userId && new Date(m.created_at) > new Date(lastRead)
+        ).length;
+      }, 0);
   },
   findConversation: (id) => data.conversations.find((c) => c.id === id),
   findConversationBetween: (u1, u2) =>
