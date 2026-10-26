@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { api } from '../api/client';
 import { useAuth } from '../context/AuthContext';
@@ -7,6 +7,11 @@ export default function Register() {
   const [form, setForm] = useState({ full_name: '', email: '', password: '', location: '', phone: '', bio: '' });
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [communities, setCommunities] = useState([]);
+
+  useEffect(() => {
+    api.getCommunities().then(setCommunities).catch(() => {});
+  }, []);
   const { login } = useAuth();
   const navigate = useNavigate();
 
@@ -45,8 +50,12 @@ export default function Register() {
             <input type="password" className="input" value={form.password} onChange={(e) => setForm({ ...form, password: e.target.value })} required minLength={6} />
           </div>
           <div>
-            <label className="text-sm text-gray-600 block mb-1">Location</label>
-            <input className="input" placeholder="e.g. Nairobi, Kenya" value={form.location} onChange={(e) => setForm({ ...form, location: e.target.value })} />
+            <label className="text-sm text-gray-600 block mb-1">Community</label>
+            <select className="input" value={form.location} onChange={(e) => setForm({ ...form, location: e.target.value })} required>
+              <option value="">Select your local community</option>
+              {communities.map((c) => <option key={c} value={c}>{c}</option>)}
+            </select>
+            <p className="text-xs text-gray-400 mt-1">Matching is by community name, not maps or distance.</p>
           </div>
           <div>
             <label className="text-sm text-gray-600 block mb-1">Phone</label>
