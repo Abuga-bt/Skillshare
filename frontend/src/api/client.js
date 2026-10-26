@@ -43,4 +43,5 @@ export const api = {
   createReview: (body) => request('/reviews', { method: 'POST', body: JSON.stringify(body) }),
   getReviews: (userId) => request(`/users/${userId}/reviews`),
   getCategories: () => request('/categories'),
+  getCommunities: () => request('/communities'),
 };
