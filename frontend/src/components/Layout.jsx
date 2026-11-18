@@ -9,16 +9,17 @@ export default function Layout() {
   const location = useLocation();
   const [menuOpen, setMenuOpen] = useState(false);
   const [unread, setUnread] = useState(0);
+  const [notifCount, setNotifCount] = useState(0);
 
   useEffect(() => {
     if (!isAuthenticated) {
       setUnread(0);
+      setNotifCount(0);
       return;
     }
     const load = () => {
-      api.getUnreadCount()
-        .then((d) => setUnread(d.count || 0))
-        .catch(() => {});
+      api.getUnreadCount().then((d) => setUnread(d.count || 0)).catch(() => {});
+      api.getNotificationUnreadCount().then((d) => setNotifCount(d.count || 0)).catch(() => {});
     };
     load();
     const t = setInterval(load, 15000);
@@ -32,7 +33,7 @@ export default function Layout() {
         to={to}
         onClick={() => setMenuOpen(false)}
         className={`relative flex items-center gap-1.5 px-3 py-2 text-sm rounded-lg transition-colors ${
-          active ? 'text-teal-700 font-semibold bg-teal-50/80' : 'text-stone-600 hover:text-teal-700 hover:bg-white/50'
+          active ? 'text-teal-700 font-semibold bg-teal-50' : 'text-stone-600 hover:text-teal-700 hover:bg-stone-50'
         }`}
       >
         {label}
@@ -59,6 +60,7 @@ export default function Layout() {
             {nav('/browse', 'Browse Skills')}
             {isAuthenticated && nav('/exchanges', 'Exchanges')}
             {isAuthenticated && nav('/messages', 'Messages', unread)}
+            {isAuthenticated && nav('/notifications', 'Alerts', notifCount)}
             {nav('/help', 'Help')}
           </nav>
 
@@ -67,10 +69,14 @@ export default function Layout() {
               <>
                 <Link
                   to={`/profile/${user.id}`}
-                  className="w-9 h-9 rounded-full bg-gradient-to-br from-teal-500 to-teal-700 text-white flex items-center justify-center font-semibold text-sm shadow-sm hover:shadow ring-2 ring-white hover:ring-teal-100 transition"
+                  className="w-9 h-9 rounded-full overflow-hidden bg-gradient-to-br from-teal-400 to-teal-700 text-white flex items-center justify-center font-semibold text-sm shadow-sm hover:shadow ring-2 ring-white hover:ring-teal-100 transition"
                   title={user.full_name}
                 >
-                  {initial}
+                  {user.avatar ? (
+                    <img src={user.avatar} alt="" className="w-full h-full object-cover" />
+                  ) : (
+                    initial
+                  )}
                 </Link>
                 <button
                   onClick={() => { logout(); navigate('/'); }}
@@ -86,12 +92,12 @@ export default function Layout() {
               </>
             )}
             <button
-              className="md:hidden relative p-2 text-stone-600 hover:bg-white/50 rounded-lg text-sm font-medium"
+              className="md:hidden relative p-2 text-stone-600 hover:bg-stone-100 rounded-lg text-sm font-medium"
               onClick={() => setMenuOpen(!menuOpen)}
               aria-label="Menu"
             >
               {menuOpen ? 'Close' : 'Menu'}
-              {unread > 0 && !menuOpen && (
+              {(unread > 0 || notifCount > 0) && !menuOpen && (
                 <span className="absolute top-1 right-1 w-2 h-2 rounded-full bg-red-500" />
               )}
             </button>
@@ -103,6 +109,7 @@ export default function Layout() {
             {nav('/browse', 'Browse Skills')}
             {isAuthenticated && nav('/exchanges', 'Exchanges')}
             {isAuthenticated && nav('/messages', 'Messages', unread)}
+            {isAuthenticated && nav('/notifications', 'Alerts', notifCount)}
             {nav('/help', 'Help')}
             {isAuthenticated && (
               <button
