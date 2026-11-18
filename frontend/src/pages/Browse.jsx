@@ -25,14 +25,30 @@ const ICON_BG = ['bg-rose-50 text-rose-700', 'bg-teal-50 text-teal-700', 'bg-sky
 
 export default function Browse() {
   const [searchParams] = useSearchParams();
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, user } = useAuth();
   const navigate = useNavigate();
   const [skills, setSkills] = useState([]);
   const [categories, setCategories] = useState([]);
+  const [communities, setCommunities] = useState([]);
   const [loading, setLoading] = useState(true);
   const [q, setQ] = useState(searchParams.get('q') || '');
   const [category, setCategory] = useState(searchParams.get('category') || 'All Categories');
+  const [community, setCommunity] = useState(
+    searchParams.get('community') || (user?.location ? user.location : 'All Communities')
+  );
+  const [typeFilter, setTypeFilter] = useState(searchParams.get('type') || 'all');
+  const [sortBy, setSortBy] = useState('newest');
   const [requesting, setRequesting] = useState(null);
+  const [gps, setGps] = useState({ lat: user?.lat ?? null, lng: user?.lng ?? null });
+
+  useEffect(() => {
+    if (user?.location && !searchParams.get('community')) {
+      setCommunity(user.location);
+    }
+    if (user?.lat != null && user?.lng != null) {
+      setGps({ lat: user.lat, lng: user.lng });
+    }
+  }, [user]);
 
   const load = async () => {
     setLoading(true);
@@ -40,18 +56,62 @@ export default function Browse() {
       const params = {};
       if (q) params.q = q;
       if (category && category !== 'All Categories') params.category = category;
+      if (community && community !== 'All Communities') params.community = community;
+      if (typeFilter && typeFilter !== 'all') params.type = typeFilter;
+      if (gps.lat != null && gps.lng != null) {
+        params.lat = gps.lat;
+        params.lng = gps.lng;
+      }
+      if (sortBy === 'distance') params.sort = 'distance';
       setSkills(await api.getSkills(params));
-    } catch (e) { console.error(e); }
-    finally { setLoading(false); }
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setLoading(false);
+    }
   };
 
-  useEffect(() => { api.getCategories().then(setCategories).catch(() => {}); }, []);
-  useEffect(() => { load(); }, [category]);
+  useEffect(() => {
+    api.getCategories().then(setCategories).catch(() => {});
+    api.getCommunities().then(setCommunities).catch(() => {});
+  }, []);
 
-  const handleSearch = (e) => { e.preventDefault(); load(); };
+  useEffect(() => {
+    load();
+  }, [category, community, typeFilter, sortBy, gps.lat, gps.lng]);
+
+  const handleSearch = (e) => {
+    e.preventDefault();
+    load();
+  };
+
+  const useDeviceGps = () => {
+    if (!navigator.geolocation) {
+      alert('Geolocation is not supported on this device');
+      return;
+    }
+    navigator.geolocation.getCurrentPosition(
+      async (pos) => {
+        const lat = pos.coords.latitude;
+        const lng = pos.coords.longitude;
+        setGps({ lat, lng });
+        setSortBy('distance');
+        if (isAuthenticated && user) {
+          try {
+            await api.updateUser(user.id, { lat, lng });
+          } catch (_) {}
+        }
+      },
+      () => alert('Could not get your location. Allow location access and try again.'),
+      { enableHighAccuracy: false, timeout: 10000 }
+    );
+  };
 
   const requestExchange = async (skillId) => {
-    if (!isAuthenticated) { navigate('/login'); return; }
+    if (!isAuthenticated) {
+      navigate('/login');
+      return;
+    }
     setRequesting(skillId);
     try {
       await api.createExchange({ skill_id: skillId, message: 'Hi, I would like to exchange for this skill.' });
@@ -66,29 +126,74 @@ export default function Browse() {
 
   return (
     <div className="max-w-6xl mx-auto px-4 py-10">
-      <div className="mb-8">
+      <div className="mb-6">
         <h1 className="font-display text-3xl font-bold text-stone-900 mb-1">Browse Skills</h1>
-        <p className="text-stone-400 text-sm">Discover skills in your community and start exchanging</p>
+        <p className="text-stone-400 text-sm">
+          Start in your community. If nothing matches, switch to <strong>All Communities</strong> — optional GPS sorts by approximate distance.
+        </p>
       </div>
 
-      <form onSubmit={handleSearch} className="flex flex-col sm:flex-row gap-3 mb-8">
-        <div className="relative flex-1">
+      {user?.location && community === user.location && (
+        <div className="mb-4 flex flex-wrap items-center gap-2 text-sm">
+          <span className="text-stone-500">Showing your community ({user.location}).</span>
+          <button
+            type="button"
+            className="text-teal-700 font-medium hover:underline"
+            onClick={() => setCommunity('All Communities')}
+          >
+            Search outside community
+          </button>
+        </div>
+      )}
+
+      <form onSubmit={handleSearch} className="flex flex-col gap-3 mb-8">
+        <div className="flex flex-col sm:flex-row gap-3 flex-wrap">
           <input
-            className="input"
+            className="input flex-1 min-w-[160px]"
             placeholder="Search skills..."
             value={q}
             onChange={(e) => setQ(e.target.value)}
           />
+          <select className="input sm:w-44" value={category} onChange={(e) => setCategory(e.target.value)}>
+            <option>All Categories</option>
+            {categories.map((c) => (
+              <option key={c}>{c}</option>
+            ))}
+          </select>
+          <select className="input sm:w-48" value={community} onChange={(e) => setCommunity(e.target.value)}>
+            <option>All Communities</option>
+            {communities.map((c) => (
+              <option key={c}>{c}</option>
+            ))}
+          </select>
+          <select className="input sm:w-36" value={typeFilter} onChange={(e) => setTypeFilter(e.target.value)}>
+            <option value="all">All status</option>
+            <option value="offering">Offering</option>
+            <option value="seeking">Seeking</option>
+          </select>
+          <button type="submit" className="btn-teal sm:px-6">
+            Search
+          </button>
         </div>
-        <select
-          className="input sm:w-48"
-          value={category}
-          onChange={(e) => setCategory(e.target.value)}
-        >
-          <option>All Categories</option>
-          {categories.map((c) => <option key={c}>{c}</option>)}
-        </select>
-        <button type="submit" className="btn-teal sm:px-6">Search</button>
+        <div className="flex flex-wrap gap-2 items-center">
+          {user?.location && (
+            <button type="button" className="btn-teal-outline text-sm py-1.5" onClick={() => setCommunity(user.location)}>
+              My community
+            </button>
+          )}
+          <button type="button" className="btn-teal-outline text-sm py-1.5" onClick={() => setCommunity('All Communities')}>
+            All communities
+          </button>
+          <button type="button" className="btn-teal-outline text-sm py-1.5" onClick={useDeviceGps}>
+            Use GPS · sort by distance
+          </button>
+          {gps.lat != null && (
+            <select className="input text-sm py-1.5 w-auto" value={sortBy} onChange={(e) => setSortBy(e.target.value)}>
+              <option value="newest">Newest</option>
+              <option value="distance">Nearest first</option>
+            </select>
+          )}
+        </div>
       </form>
 
       {loading ? (
@@ -97,8 +202,7 @@ export default function Browse() {
             <div key={i} className="card p-5 animate-pulse">
               <div className="w-10 h-10 rounded-full bg-stone-100 mb-3" />
               <div className="h-5 bg-stone-100 rounded w-3/4 mb-2" />
-              <div className="h-4 bg-stone-50 rounded w-full mb-1" />
-              <div className="h-4 bg-stone-50 rounded w-2/3 mb-4" />
+              <div className="h-4 bg-stone-50 rounded w-full mb-4" />
               <div className="h-10 bg-stone-50 rounded-xl" />
             </div>
           ))}
@@ -106,10 +210,29 @@ export default function Browse() {
       ) : skills.length === 0 ? (
         <div className="card p-14 text-center">
           <p className="text-stone-500 mb-1 font-medium">No skills found</p>
-          <p className="text-stone-400 text-sm mb-4">Try a different search or category</p>
-          <button onClick={() => { setQ(''); setCategory('All Categories'); }} className="btn-teal-outline text-sm">
-            Clear filters
-          </button>
+          <p className="text-stone-400 text-sm mb-4">
+            {community !== 'All Communities'
+              ? 'Try searching all communities or another category.'
+              : 'Clear filters or offer a skill yourself.'}
+          </p>
+          <div className="flex flex-wrap justify-center gap-2">
+            {community !== 'All Communities' && (
+              <button type="button" onClick={() => setCommunity('All Communities')} className="btn-teal text-sm">
+                Search all communities
+              </button>
+            )}
+            <button
+              type="button"
+              onClick={() => {
+                setQ('');
+                setCategory('All Categories');
+                setTypeFilter('all');
+              }}
+              className="btn-teal-outline text-sm"
+            >
+              Clear other filters
+            </button>
+          </div>
         </div>
       ) : (
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
@@ -119,21 +242,32 @@ export default function Browse() {
                 <div className={`w-11 h-11 rounded-full ${ICON_BG[i % ICON_BG.length]} flex items-center justify-center text-sm font-bold`}>
                   {letterFor(skill)}
                 </div>
-                <span className="text-xs font-medium bg-teal-50 text-teal-700 px-2.5 py-1 rounded-full">
-                  Offering
-                </span>
+                <div className="flex flex-col items-end gap-1">
+                  <span
+                    className={`text-xs font-medium px-2.5 py-1 rounded-full ${
+                      skill.type === 'seeking' ? 'bg-amber-50 text-amber-700' : 'bg-teal-50 text-teal-700'
+                    }`}
+                  >
+                    {skill.type === 'seeking' ? 'Seeking' : 'Offering'}
+                  </span>
+                  {skill.distance_km != null && (
+                    <span className="text-[11px] text-stone-400">~{skill.distance_km} km</span>
+                  )}
+                </div>
               </div>
               <h3 className="font-semibold text-lg text-stone-900 mb-1 leading-snug">{skill.title}</h3>
               <p className="text-sm text-stone-500 mb-4 line-clamp-2 flex-1 leading-relaxed">{skill.description}</p>
               <div className="flex items-center gap-2.5 mb-4 text-sm">
-                <span className="w-8 h-8 rounded-full bg-gradient-to-br from-teal-400 to-teal-600 text-white flex items-center justify-center text-xs font-semibold shadow-sm">
-                  {skill.provider_name?.charAt(0)}
+                <span className="w-8 h-8 rounded-full overflow-hidden bg-gradient-to-br from-teal-400 to-teal-600 text-white flex items-center justify-center text-xs font-semibold shadow-sm shrink-0">
+                  {skill.provider_avatar ? (
+                    <img src={skill.provider_avatar} alt="" className="w-full h-full object-cover" />
+                  ) : (
+                    skill.provider_name?.charAt(0)
+                  )}
                 </span>
                 <div>
                   <div className="font-medium text-stone-800 text-sm">{skill.provider_name}</div>
-                  {skill.provider_location && (
-                    <div className="text-xs text-stone-400">{skill.provider_location}</div>
-                  )}
+                  {skill.provider_location && <div className="text-xs text-stone-400">{skill.provider_location}</div>}
                 </div>
               </div>
               <button

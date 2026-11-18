@@ -49,3 +49,4 @@ export const api = {
   markAllNotificationsRead: () => request('/notifications/read-all', { method: 'POST' }),
   markNotificationRead: (id) => request(`/notifications/${id}/read`, { method: 'POST' }),
 };
+

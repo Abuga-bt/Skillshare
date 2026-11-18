@@ -3,6 +3,8 @@ const path = require('path');
 const bcrypt = require('bcryptjs');
 const { v4: uuidv4 } = require('uuid');
 
+const COMMUNITIES = require('./communities');
+
 const DB_FILE = path.join(__dirname, 'data.json');
 
 const defaultData = () => ({
@@ -12,6 +14,7 @@ const defaultData = () => ({
   conversations: [],
   messages: [],
   reviews: [],
+  notifications: [],
 });
 
 function load() {
@@ -23,6 +26,7 @@ function load() {
   }
   const data = JSON.parse(fs.readFileSync(DB_FILE, 'utf8'));
   if (!data.exchanges) data.exchanges = [];
+  if (!data.notifications) data.notifications = [];
   return data;
 }
 
@@ -33,13 +37,13 @@ function save(data) {
 function seed(data) {
   const hash = bcrypt.hashSync('password123', 10);
   const users = [
-    { id: uuidv4(), full_name: 'Jane Wanjiku', email: 'jane@example.com', password_hash: hash, location: 'Nairobi, Kenya', phone: '+254712345001', bio: 'Experienced math tutor and piano teacher.', created_at: new Date().toISOString() },
-    { id: uuidv4(), full_name: 'David Otieno', email: 'david@example.com', password_hash: hash, location: 'Kisumu, Kenya', phone: '+254712345002', bio: 'Plumber and handyman.', created_at: new Date().toISOString() },
-    { id: uuidv4(), full_name: 'Amina Hassan', email: 'amina@example.com', password_hash: hash, location: 'Mombasa, Kenya', phone: '+254712345003', bio: 'Graphic designer and photographer.', created_at: new Date().toISOString() },
-    { id: uuidv4(), full_name: 'Brian Kamau', email: 'brian@example.com', password_hash: hash, location: 'Nakuru, Kenya', phone: '+254712345004', bio: 'Full-stack developer.', created_at: new Date().toISOString() },
-    { id: uuidv4(), full_name: 'Grace Achieng', email: 'grace@example.com', password_hash: hash, location: 'Nairobi, Kenya', phone: '+254712345005', bio: 'Tailor and fashion designer.', created_at: new Date().toISOString() },
-    { id: uuidv4(), full_name: 'Ashley Kuthi', email: 'ashley@example.com', password_hash: hash, location: 'Naivasha', phone: '+254712345006', bio: 'Gym instructor with 5 years of experience.', created_at: new Date().toISOString() },
-    { id: uuidv4(), full_name: 'Karen Ruturi', email: 'karen@example.com', password_hash: hash, location: 'Naivasha', phone: '+254712345007', bio: 'I teach English, Mandarin and Latin.', created_at: new Date().toISOString() },
+    { id: uuidv4(), full_name: 'Jane Wanjiku', email: 'jane@example.com', password_hash: hash, location: 'JKUAT Main Campus', avatar: '', lat: -1.089, lng: 37.01, phone: '+254712345001', bio: 'Experienced math tutor and piano teacher.', created_at: new Date().toISOString() },
+    { id: uuidv4(), full_name: 'David Otieno', email: 'david@example.com', password_hash: hash, location: 'Kisumu', avatar: '', lat: -0.091, lng: 34.768, phone: '+254712345002', bio: 'Plumber and handyman.', created_at: new Date().toISOString() },
+    { id: uuidv4(), full_name: 'Amina Hassan', email: 'amina@example.com', password_hash: hash, location: 'Mombasa', avatar: '', lat: -4.043, lng: 39.668, phone: '+254712345003', bio: 'Graphic designer and photographer.', created_at: new Date().toISOString() },
+    { id: uuidv4(), full_name: 'Brian Kamau', email: 'brian@example.com', password_hash: hash, location: 'Nakuru', avatar: '', lat: -0.303, lng: 36.08, phone: '+254712345004', bio: 'Full-stack developer.', created_at: new Date().toISOString() },
+    { id: uuidv4(), full_name: 'Grace Achieng', email: 'grace@example.com', password_hash: hash, location: 'Juja Town', avatar: '', lat: -1.101, lng: 37.013, phone: '+254712345005', bio: 'Tailor and fashion designer.', created_at: new Date().toISOString() },
+    { id: uuidv4(), full_name: 'Ashley Kuthi', email: 'ashley@example.com', password_hash: hash, location: 'Naivasha', avatar: '', lat: -0.717, lng: 36.431, phone: '+254712345006', bio: 'Gym instructor with 5 years of experience.', created_at: new Date().toISOString() },
+    { id: uuidv4(), full_name: 'Karen Ruturi', email: 'karen@example.com', password_hash: hash, location: 'Naivasha', avatar: '', lat: -0.717, lng: 36.431, phone: '+254712345007', bio: 'I teach English, Mandarin and Latin.', created_at: new Date().toISOString() },
   ];
   data.users = users;
 
@@ -67,6 +71,7 @@ function seed(data) {
     created_at: new Date().toISOString(),
   }));
 
+  // Sample exchange
   data.exchanges = [
     {
       id: uuidv4(),
@@ -99,6 +104,15 @@ function seed(data) {
 
 let data = load();
 
+function haversineKm(lat1, lon1, lat2, lon2) {
+  const R = 6371;
+  const toRad = (d) => (d * Math.PI) / 180;
+  const dLat = toRad(lat2 - lat1);
+  const dLon = toRad(lon2 - lon1);
+  const a = Math.sin(dLat / 2) ** 2 + Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLon / 2) ** 2;
+  return Math.round(R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a)) * 10) / 10;
+}
+
 const db = {
   findUserByEmail: (email) => data.users.find((u) => u.email === email),
   findUserById: (id) => data.users.find((u) => u.id === id),
@@ -115,6 +129,7 @@ const db = {
     members: data.users.length,
     exchanges: data.exchanges.filter((e) => e.status === 'completed' || e.status === 'accepted').length,
   }),
+  getCommunities: () => COMMUNITIES,
   getSkills: (filters = {}) => {
     let list = [...data.skills];
     if (filters.q) {
@@ -124,18 +139,51 @@ const db = {
     if (filters.category && filters.category !== 'All' && filters.category !== 'All Categories') {
       list = list.filter((s) => s.category === filters.category);
     }
-    return list.map((s) => {
+    if (filters.type && filters.type !== 'all') {
+      list = list.filter((s) => (s.type || 'offering') === filters.type);
+    }
+    // Community boundary: optional. Use "All Communities" to look outside.
+    if (filters.community && filters.community !== 'All Communities') {
+      list = list.filter((s) => {
+        const u = data.users.find((x) => x.id === s.user_id);
+        return u && u.location === filters.community;
+      });
+    }
+    const viewerLat = filters.lat != null && filters.lat !== '' ? Number(filters.lat) : null;
+    const viewerLng = filters.lng != null && filters.lng !== '' ? Number(filters.lng) : null;
+    const mapped = list.map((s) => {
       const u = data.users.find((x) => x.id === s.user_id);
       const reviews = data.reviews.filter((r) => r.reviewed_id === s.user_id);
       const avg = reviews.length ? reviews.reduce((a, r) => a + r.rating, 0) / reviews.length : null;
-      return { ...s, provider_name: u?.full_name, provider_location: u?.location, provider_rating: avg };
-    }).sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+      let distance_km = null;
+      if (viewerLat != null && viewerLng != null && u && u.lat != null && u.lng != null) {
+        distance_km = haversineKm(viewerLat, viewerLng, Number(u.lat), Number(u.lng));
+      }
+      return {
+        ...s,
+        type: s.type || 'offering',
+        provider_name: u?.full_name,
+        provider_location: u?.location,
+        provider_avatar: u?.avatar || '',
+        provider_rating: avg,
+        distance_km,
+      };
+    });
+    if (viewerLat != null && viewerLng != null && filters.sort === 'distance') {
+      return mapped.sort((a, b) => {
+        if (a.distance_km == null && b.distance_km == null) return 0;
+        if (a.distance_km == null) return 1;
+        if (b.distance_km == null) return -1;
+        return a.distance_km - b.distance_km;
+      });
+    }
+    return mapped.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
   },
   findSkill: (id) => {
     const s = data.skills.find((x) => x.id === id);
     if (!s) return null;
     const u = data.users.find((x) => x.id === s.user_id);
-    return { ...s, provider_name: u?.full_name, provider_location: u?.location, provider_bio: u?.bio };
+    return { ...s, type: s.type || 'offering', provider_name: u?.full_name, provider_location: u?.location, provider_bio: u?.bio, provider_avatar: u?.avatar || '' };
   },
   createSkill: (skill) => { data.skills.push(skill); save(data); return skill; },
   updateSkill: (id, updates) => {
@@ -147,6 +195,7 @@ const db = {
   },
   deleteSkill: (id) => { data.skills = data.skills.filter((s) => s.id !== id); save(data); },
   getSkillsByUser: (userId) => data.skills.filter((s) => s.user_id === userId).sort((a, b) => new Date(b.created_at) - new Date(a.created_at)),
+  // Exchanges
   createExchange: (ex) => { data.exchanges.push(ex); save(data); return ex; },
   findExchange: (id) => data.exchanges.find((e) => e.id === id),
   updateExchange: (id, updates) => {
@@ -175,6 +224,7 @@ const db = {
       })
       .sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
   },
+  // Messages
   getConversations: (userId) => {
     return data.conversations
       .filter((c) => c.user1_id === userId || c.user2_id === userId)
@@ -249,7 +299,36 @@ const db = {
         return { ...r, reviewer_name: u?.full_name };
       })
       .sort((a, b) => new Date(b.created_at) - new Date(a.created_at)),
+  createNotification: (n) => {
+    if (!data.notifications) data.notifications = [];
+    data.notifications.push(n);
+    save(data);
+    return n;
+  },
+  getNotifications: (userId) => {
+    if (!data.notifications) data.notifications = [];
+    return data.notifications
+      .filter((n) => n.user_id === userId)
+      .sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+  },
+  getUnreadNotificationCount: (userId) => {
+    if (!data.notifications) data.notifications = [];
+    return data.notifications.filter((n) => n.user_id === userId && !n.read).length;
+  },
+  markNotificationsRead: (userId) => {
+    if (!data.notifications) data.notifications = [];
+    data.notifications.forEach((n) => {
+      if (n.user_id === userId) n.read = true;
+    });
+    save(data);
+  },
+  markNotificationRead: (id, userId) => {
+    if (!data.notifications) data.notifications = [];
+    const n = data.notifications.find((x) => x.id === id && x.user_id === userId);
+    if (n) { n.read = true; save(data); }
+    return n;
+  },
   getCategories: () => [...new Set(data.skills.map((s) => s.category))].sort(),
 };
 
-module.exports = { db };
+module.exports = { db, COMMUNITIES };

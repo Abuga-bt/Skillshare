@@ -3,7 +3,7 @@ const cors = require('cors');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const { v4: uuidv4 } = require('uuid');
-const { db } = require('./db');
+const { db, COMMUNITIES } = require('./db');
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -27,7 +27,7 @@ function auth(req, res, next) {
 
 function publicUser(u) {
   if (!u) return null;
-  return { id: u.id, full_name: u.full_name, email: u.email, location: u.location || '', phone: u.phone || '', bio: u.bio || '' };
+  return { id: u.id, full_name: u.full_name, email: u.email, location: u.location || '', phone: u.phone || '', bio: u.bio || '', avatar: u.avatar || '', lat: u.lat ?? null, lng: u.lng ?? null };
 }
 
 // AUTH
@@ -40,6 +40,7 @@ app.post('/api/auth/register', (req, res) => {
       id: uuidv4(), full_name, email,
       password_hash: bcrypt.hashSync(password, 10),
       location: location || '', phone: phone || '', bio: bio || '',
+      avatar: '', lat: null, lng: null,
       created_at: new Date().toISOString(),
     };
     db.createUser(user);
@@ -81,29 +82,42 @@ app.get('/api/users/:id', auth, (req, res) => {
 
 app.put('/api/users/:id', auth, (req, res) => {
   if (req.user.id !== req.params.id) return res.status(403).json({ error: 'Can only update your own profile' });
-  const { full_name, location, bio, phone } = req.body;
+  const { full_name, location, bio, phone, avatar, lat, lng } = req.body;
   const updated = db.updateUser(req.params.id, {
     ...(full_name !== undefined && { full_name }),
     ...(location !== undefined && { location }),
     ...(bio !== undefined && { bio }),
     ...(phone !== undefined && { phone }),
+    ...(avatar !== undefined && { avatar }),
+    ...(lat !== undefined && { lat }),
+    ...(lng !== undefined && { lng }),
   });
   res.json(publicUser(updated));
 });
 
 // SKILLS
-app.get('/api/skills', (req, res) => res.json(db.getSkills({ q: req.query.q, category: req.query.category })));
+app.get('/api/communities', (req, res) => res.json(COMMUNITIES || db.getCommunities()));
+app.get('/api/skills', (req, res) => res.json(db.getSkills({
+  q: req.query.q,
+  category: req.query.category,
+  community: req.query.community,
+  type: req.query.type,
+  lat: req.query.lat,
+  lng: req.query.lng,
+  sort: req.query.sort,
+})));
 app.get('/api/skills/:id', (req, res) => {
   const skill = db.findSkill(req.params.id);
   if (!skill) return res.status(404).json({ error: 'Skill not found' });
   res.json(skill);
 });
 app.post('/api/skills', auth, (req, res) => {
-  const { title, description, category, icon } = req.body;
+  const { title, description, category, icon, type } = req.body;
   if (!title || !description || !category) return res.status(400).json({ error: 'Title, description and category required' });
+  const skillType = type === 'seeking' ? 'seeking' : 'offering';
   const skill = {
     id: uuidv4(), user_id: req.user.id, title, description, category,
-    icon: icon || 'star', type: 'offering', created_at: new Date().toISOString(),
+    icon: icon || 'star', type: skillType, created_at: new Date().toISOString(),
   };
   res.status(201).json(db.createSkill(skill));
 });
@@ -111,11 +125,12 @@ app.put('/api/skills/:id', auth, (req, res) => {
   const skill = db.findSkill(req.params.id);
   if (!skill) return res.status(404).json({ error: 'Skill not found' });
   if (skill.user_id !== req.user.id) return res.status(403).json({ error: 'Not your skill' });
-  const { title, description, category } = req.body;
+  const { title, description, category, type } = req.body;
   res.json(db.updateSkill(req.params.id, {
     ...(title !== undefined && { title }),
     ...(description !== undefined && { description }),
     ...(category !== undefined && { category }),
+    ...(type !== undefined && { type: type === 'seeking' ? 'seeking' : 'offering' }),
   }));
 });
 app.delete('/api/skills/:id', auth, (req, res) => {
@@ -148,7 +163,18 @@ app.post('/api/exchanges', auth, (req, res) => {
     status: 'pending',
     created_at: new Date().toISOString(),
   };
-  res.status(201).json(db.createExchange(ex));
+  const created = db.createExchange(ex);
+  db.createNotification({
+    id: uuidv4(),
+    user_id: skill.user_id,
+    type: 'exchange_request',
+    title: 'New exchange request',
+    body: `${req.user.full_name || 'Someone'} requested "${skill.title}"`,
+    link: '/exchanges',
+    read: false,
+    created_at: new Date().toISOString(),
+  });
+  res.status(201).json(created);
 });
 
 app.patch('/api/exchanges/:id', auth, (req, res) => {
@@ -158,6 +184,7 @@ app.patch('/api/exchanges/:id', auth, (req, res) => {
   if (!['accepted', 'declined', 'completed'].includes(status)) {
     return res.status(400).json({ error: 'Invalid status' });
   }
+  // Only provider can accept/decline; either party can mark completed
   if ((status === 'accepted' || status === 'declined') && ex.provider_id !== req.user.id) {
     return res.status(403).json({ error: 'Only the skill provider can accept/decline' });
   }
@@ -177,6 +204,28 @@ app.patch('/api/exchanges/:id', auth, (req, res) => {
       };
       db.createConversation(conv);
     }
+    db.createNotification({
+      id: uuidv4(),
+      user_id: ex.requester_id,
+      type: 'exchange_accepted',
+      title: 'Exchange accepted',
+      body: 'Your exchange request was accepted. You can message them now.',
+      link: '/messages',
+      read: false,
+      created_at: new Date().toISOString(),
+    });
+  }
+  if (status === 'declined') {
+    db.createNotification({
+      id: uuidv4(),
+      user_id: ex.requester_id,
+      type: 'exchange_declined',
+      title: 'Exchange declined',
+      body: 'Your exchange request was declined.',
+      link: '/exchanges',
+      read: false,
+      created_at: new Date().toISOString(),
+    });
   }
   res.json(updated);
 });
@@ -258,6 +307,22 @@ app.post('/api/reviews', auth, (req, res) => {
   res.status(201).json(db.createReview(review));
 });
 app.get('/api/users/:id/reviews', (req, res) => res.json(db.getReviewsFor(req.params.id)));
+
+// NOTIFICATIONS
+app.get('/api/notifications', auth, (req, res) => {
+  res.json(db.getNotifications(req.user.id));
+});
+app.get('/api/notifications/unread-count', auth, (req, res) => {
+  res.json({ count: db.getUnreadNotificationCount(req.user.id) });
+});
+app.post('/api/notifications/read-all', auth, (req, res) => {
+  db.markNotificationsRead(req.user.id);
+  res.json({ ok: true });
+});
+app.post('/api/notifications/:id/read', auth, (req, res) => {
+  db.markNotificationRead(req.params.id, req.user.id);
+  res.json({ ok: true });
+});
 
 app.get('/api/health', (req, res) => res.json({ status: 'ok' }));
 
