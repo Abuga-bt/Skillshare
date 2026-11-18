@@ -10,6 +10,7 @@ import Messages from './pages/Messages';
 import Profile from './pages/Profile';
 import OfferSkill from './pages/OfferSkill';
 import Help from './pages/Help';
+import Notifications from './pages/Notifications';
 
 function PrivateRoute({ children }) {
   const { isAuthenticated, loading } = useAuth();
@@ -31,6 +32,7 @@ export default function App() {
         <Route path="messages/:convId" element={<PrivateRoute><Messages /></PrivateRoute>} />
         <Route path="profile/:id" element={<PrivateRoute><Profile /></PrivateRoute>} />
         <Route path="offer" element={<PrivateRoute><OfferSkill /></PrivateRoute>} />
+        <Route path="notifications" element={<PrivateRoute><Notifications /></PrivateRoute>} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Route>
     </Routes>
