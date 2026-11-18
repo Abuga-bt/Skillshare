@@ -61,15 +61,14 @@ export default function Home() {
             </div>
 
             <div className="order-1 md:order-2 flex justify-center">
-              <div className="w-full max-w-md aspect-square glass rounded-3xl border border-white/50 shadow-lg shadow-teal-900/5 overflow-hidden flex items-center justify-center p-2">
-                <object
-                  type="image/svg+xml"
-                  data="/skillshare_animation.svg"
+              <div className="w-full max-w-md glass rounded-3xl border border-white/50 shadow-lg shadow-teal-900/5 overflow-hidden bg-white/40">
+                <iframe
+                  src="/skillshare_animation.svg"
                   title="SkillShare animation"
-                  className="w-full h-full max-h-[360px]"
-                >
-                  <img src="/skillshare_animation.svg" alt="SkillShare illustration" className="w-full h-auto" />
-                </object>
+                  className="w-full border-0 block"
+                  style={{ height: 360 }}
+                  loading="lazy"
+                />
               </div>
             </div>
           </div>
