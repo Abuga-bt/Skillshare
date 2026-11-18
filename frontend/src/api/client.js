@@ -44,4 +44,8 @@ export const api = {
   getReviews: (userId) => request(`/users/${userId}/reviews`),
   getCategories: () => request('/categories'),
   getCommunities: () => request('/communities'),
+  getNotifications: () => request('/notifications'),
+  getNotificationUnreadCount: () => request('/notifications/unread-count'),
+  markAllNotificationsRead: () => request('/notifications/read-all', { method: 'POST' }),
+  markNotificationRead: (id) => request(`/notifications/${id}/read`, { method: 'POST' }),
 };
