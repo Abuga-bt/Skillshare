@@ -3,6 +3,62 @@ import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { api } from '../api/client';
 
+function HeroAnimation() {
+  return (
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      viewBox="0 0 400 360"
+      className="w-full h-auto block"
+      style={{ maxHeight: 360 }}
+      aria-hidden="true"
+    >
+      <defs>
+        <linearGradient id="heroBg" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stopColor="#f0fdfa" />
+          <stop offset="100%" stopColor="#ccfbf1" />
+        </linearGradient>
+      </defs>
+      <rect width="400" height="360" fill="url(#heroBg)" />
+      <circle cx="80" cy="70" r="28" fill="#5eead4" opacity="0.5">
+        <animate attributeName="cy" values="70;55;70" dur="3s" repeatCount="indefinite" />
+      </circle>
+      <circle cx="320" cy="90" r="22" fill="#fcd34d" opacity="0.45">
+        <animate attributeName="cy" values="90;75;90" dur="2.5s" repeatCount="indefinite" />
+      </circle>
+      <circle cx="200" cy="50" r="16" fill="#a78bfa" opacity="0.4">
+        <animate attributeName="cy" values="50;40;50" dur="2.8s" repeatCount="indefinite" />
+      </circle>
+      <g>
+        <animateTransform attributeName="transform" type="translate" values="0,0;0,-8;0,0" dur="2s" repeatCount="indefinite" />
+        <circle cx="100" cy="160" r="30" fill="#14b8a6" />
+        <text x="100" y="168" textAnchor="middle" fill="white" fontFamily="system-ui,sans-serif" fontSize="22" fontWeight="700">
+          A
+        </text>
+        <rect x="65" y="200" width="70" height="55" rx="20" fill="#99f6e4" />
+      </g>
+      <g>
+        <animateTransform attributeName="transform" type="translate" values="0,0;0,-8;0,0" dur="2.2s" begin="0.3s" repeatCount="indefinite" />
+        <circle cx="300" cy="160" r="30" fill="#0d9488" />
+        <text x="300" y="168" textAnchor="middle" fill="white" fontFamily="system-ui,sans-serif" fontSize="22" fontWeight="700">
+          B
+        </text>
+        <rect x="265" y="200" width="70" height="55" rx="20" fill="#5eead4" />
+      </g>
+      <line x1="145" y1="200" x2="255" y2="200" stroke="#0f766e" strokeWidth="3" strokeLinecap="round">
+        <animate attributeName="stroke-dasharray" values="0 120;120 0" dur="1.5s" repeatCount="indefinite" />
+      </line>
+      <polygon points="250,192 265,200 250,208" fill="#0f766e" />
+      <g>
+        <animateTransform attributeName="transform" type="translate" values="0,0;0,-6;0,0" dur="2.4s" repeatCount="indefinite" />
+        <rect x="145" y="270" width="110" height="44" rx="12" fill="white" stroke="#99f6e4" strokeWidth="2" />
+        <text x="200" y="297" textAnchor="middle" fill="#0f766e" fontFamily="system-ui,sans-serif" fontSize="13" fontWeight="600">
+          Skill Exchange
+        </text>
+      </g>
+    </svg>
+  );
+}
+
 export default function Home() {
   const { isAuthenticated } = useAuth();
   const [stats, setStats] = useState({ skills: 0, members: 0, exchanges: 0 });
@@ -61,14 +117,8 @@ export default function Home() {
             </div>
 
             <div className="order-1 md:order-2 flex justify-center">
-              <div className="w-full max-w-md glass rounded-3xl border border-white/50 shadow-lg shadow-teal-900/5 overflow-hidden bg-white/40">
-                <iframe
-                  src="/skillshare_animation.svg"
-                  title="SkillShare animation"
-                  className="w-full border-0 block"
-                  style={{ height: 360 }}
-                  loading="lazy"
-                />
+              <div className="w-full max-w-md glass rounded-3xl border border-white/50 shadow-lg shadow-teal-900/5 overflow-hidden bg-white/60 p-2">
+                <HeroAnimation />
               </div>
             </div>
           </div>
@@ -79,7 +129,7 @@ export default function Home() {
         <h2 className="font-display text-2xl font-bold text-center mb-10 text-stone-800">How it works</h2>
         <div className="grid md:grid-cols-3 gap-6">
           {[
-            { step: '1', title: 'Create your profile', desc: 'Sign up, add your location and a short bio so neighbours know who you are.' },
+            { step: '1', title: 'Create your profile', desc: 'Sign up, add your community and a short bio so neighbours know who you are.' },
             { step: '2', title: 'Offer or find skills', desc: 'List what you can do — tutoring, plumbing, design — or search for what you need.' },
             { step: '3', title: 'Request and exchange', desc: 'Send an exchange request, chat when accepted, share contact, and leave a review.' },
           ].map((item) => (
